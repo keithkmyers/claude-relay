@@ -9,6 +9,8 @@
   },
   "scripts": {
     "dev": "node bin/cli.js --dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepack": "npm pkg delete bin.clay-dev",
     "postpack": "npm pkg set bin.clay-dev=./bin/cli.js",
     "semantic-release": "semantic-release"
@@ -52,6 +54,8 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
-    "semantic-release": "^25.0.3"
+    "jsdom": "^28.1.0",
+    "semantic-release": "^25.0.3",
+    "vitest": "^4.0.18"
   }
 }

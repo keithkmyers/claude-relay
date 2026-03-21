@@ -146,98 +146,98 @@
   white-space: nowrap;
 }
 
-/* --- Mobile: sidecar bolted onto the input box ---
-   On mobile the nav rail is reparented into #input-wrapper by JS
-   (modules/mobile-mode.js) so it sits physically inside the same
-   container as #input-row.  It's positioned absolutely beside the
-   input box like a motorcycle sidecar — its own rounded shape,
-   slightly shorter top/bottom, with a subtly different background.
+/* --- Docked sidecar: nav rail bolted onto the input box ---
+   Activated by .nav-docked on #app (set by modules/mobile-mode.js)
+   when the viewport is mobile-width OR a right-hand panel (terminal,
+   file viewer) is open and squeezing the chat column.
+
+   The rail is reparented into #input-wrapper by JS so it sits
+   physically inside the same container as #input-row — positioned
+   absolutely beside the input box like a motorcycle sidecar.
 
    Reading mode (default): sidecar visible, input-row narrowed.
    Typing mode (.mobile-typing): sidecar hides, input gets full width. */
 
-@media (max-width: 768px) {
-  /* Narrow the input box to make room for the sidecar */
-  #input-row {
-    margin-right: 40px;
-    transition: margin-right 0.15s ease;
-  }
+/* Narrow the input box to make room for the sidecar */
+.nav-docked #input-row {
+  margin-right: 40px;
+  transition: margin-right 0.15s ease;
+}
 
-  .msg-nav-rail {
-    /* Anchor to the bottom-right of #input-wrapper (position: relative) */
-    position: absolute;
-    right: 0;
-    bottom: 3px;
-    top: auto;
-    left: auto;
-    /* Sidecar dimensions */
-    width: 34px;
-    /* Sidecar visual treatment — coordinated but distinct from input box */
-    background: var(--bg-alt);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    opacity: 1;
-    gap: 1px;
-    justify-content: center;
-    align-items: center;
-    padding: 4px 0;
-    box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.10);
-    z-index: 5;
-  }
+.nav-docked .msg-nav-rail {
+  /* Anchor to the bottom-right of #input-wrapper (position: relative) */
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  top: auto;
+  left: auto;
+  /* Sidecar dimensions */
+  width: 34px;
+  /* Sidecar visual treatment — coordinated but distinct from input box */
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  opacity: 1;
+  gap: 1px;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+  box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.10);
+  z-index: 5;
+}
 
-  .msg-nav-rail:hover {
-    opacity: 1;
-  }
+.nav-docked .msg-nav-rail:hover {
+  opacity: 1;
+}
 
-  .msg-nav-btn {
-    /* Compact rectangular buttons — no individual borders inside the sidecar */
-    width: 26px;
-    height: 24px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-muted);
-    box-shadow: none;
-  }
+.nav-docked .msg-nav-btn {
+  /* Compact rectangular buttons — no individual borders inside the sidecar */
+  width: 26px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+}
 
-  .msg-nav-btn:hover {
-    background: rgba(var(--overlay-rgb), 0.10);
-    border: none;
-  }
+.nav-docked .msg-nav-btn:hover {
+  background: rgba(var(--overlay-rgb), 0.10);
+  border: none;
+}
 
-  .msg-nav-btn:active {
-    transform: scale(0.92);
-  }
+.nav-docked .msg-nav-btn:active {
+  transform: scale(0.92);
+}
 
-  /* Accent states still apply inside the sidecar */
-  .msg-nav-btn.msg-nav-end.at-bottom {
-    background: var(--accent-8);
-    color: var(--accent);
-    border: none;
-  }
+/* Accent states still apply inside the sidecar */
+.nav-docked .msg-nav-btn.msg-nav-end.at-bottom {
+  background: var(--accent-8);
+  color: var(--accent);
+  border: none;
+}
 
-  .msg-nav-btn.msg-nav-end.at-bottom:hover {
-    background: var(--accent-15);
-  }
+.nav-docked .msg-nav-btn.msg-nav-end.at-bottom:hover {
+  background: var(--accent-15);
+}
 
-  .msg-nav-btn .lucide {
-    width: 13px;
-    height: 13px;
-  }
+.nav-docked .msg-nav-btn .lucide {
+  width: 13px;
+  height: 13px;
+}
 
-  .stream-indicator-dot {
-    width: 6px;
-    height: 6px;
-  }
+.nav-docked .stream-indicator-dot {
+  width: 6px;
+  height: 6px;
+}
 
-  /* Hide position counter & separator — save vertical space in sidecar */
-  .msg-nav-pos {
-    display: none;
-  }
+/* Hide position counter & separator — save vertical space in sidecar */
+.nav-docked .msg-nav-pos {
+  display: none;
+}
 
-  .msg-nav-sep {
-    display: none;
-  }
+.nav-docked .msg-nav-sep {
+  display: none;
 }
 
 /* --- Typing mode: hide sidecar, restore full input width ---

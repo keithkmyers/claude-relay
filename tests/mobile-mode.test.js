@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { initMobileMode, isMobile, isTypingMode } from "../lib/public/modules/mobile-mode.js";
+import { initMobileMode, isMobile, isTypingMode, isPanelOpen } from "../lib/public/modules/mobile-mode.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -300,6 +300,175 @@ describe("Mobile Mode Detection", function () {
 
       fireMqlChange(false);
       expect(ctx._railEl.parentElement).toBe(ctx._appEl);
+    });
+  });
+
+  // ── Panel-open docking (desktop) ──────────────────────────────────
+
+  describe("Panel-open docking (desktop)", function () {
+    function createDomWithPanels() {
+      var appEl = document.createElement("div");
+      appEl.id = "app";
+      document.body.appendChild(appEl);
+
+      var inputArea = document.createElement("div");
+      inputArea.id = "input-area";
+      appEl.appendChild(inputArea);
+
+      var inputWrapper = document.createElement("div");
+      inputWrapper.id = "input-wrapper";
+      inputArea.appendChild(inputWrapper);
+
+      var inputRow = document.createElement("div");
+      inputRow.id = "input-row";
+      inputWrapper.appendChild(inputRow);
+
+      var inputEl = document.createElement("textarea");
+      inputEl.id = "input";
+      inputRow.appendChild(inputEl);
+
+      var railEl = document.createElement("div");
+      railEl.className = "msg-nav-rail";
+      appEl.appendChild(railEl);
+
+      // Panel elements (siblings of #app in real DOM, but for test
+      // purposes they just need to exist in the document)
+      var fileViewer = document.createElement("div");
+      fileViewer.id = "file-viewer";
+      fileViewer.className = "hidden";
+      document.body.appendChild(fileViewer);
+
+      var terminal = document.createElement("div");
+      terminal.id = "terminal-container";
+      terminal.className = "hidden";
+      document.body.appendChild(terminal);
+
+      return {
+        $: function (id) { return document.getElementById(id); },
+        inputEl: inputEl,
+        _appEl: appEl,
+        _inputWrapper: inputWrapper,
+        _railEl: railEl,
+        _fileViewer: fileViewer,
+        _terminal: terminal,
+      };
+    }
+
+    function cleanupPanels() {
+      var fv = document.getElementById("file-viewer");
+      if (fv) fv.remove();
+      var tc = document.getElementById("terminal-container");
+      if (tc) tc.remove();
+    }
+
+    afterEach(function () {
+      cleanupPanels();
+    });
+
+    it("docks rail when terminal opens on desktop", async function () {
+      createMockMatchMedia(false);
+      var ctx = createDomWithPanels();
+      initMobileMode(ctx);
+
+      expect(ctx._railEl.parentElement).toBe(ctx._appEl);
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(false);
+
+      // Simulate terminal opening
+      ctx._terminal.classList.remove("hidden");
+
+      // MutationObserver is async — wait a tick
+      await new Promise(function (r) { setTimeout(r, 0); });
+
+      expect(isPanelOpen()).toBe(true);
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(true);
+      expect(ctx._railEl.parentElement).toBe(ctx._inputWrapper);
+    });
+
+    it("undocks rail when terminal closes", async function () {
+      createMockMatchMedia(false);
+      var ctx = createDomWithPanels();
+      initMobileMode(ctx);
+
+      // Open terminal
+      ctx._terminal.classList.remove("hidden");
+      await new Promise(function (r) { setTimeout(r, 0); });
+      expect(ctx._railEl.parentElement).toBe(ctx._inputWrapper);
+
+      // Close terminal
+      ctx._terminal.classList.add("hidden");
+      await new Promise(function (r) { setTimeout(r, 0); });
+
+      expect(isPanelOpen()).toBe(false);
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(false);
+      expect(ctx._railEl.parentElement).toBe(ctx._appEl);
+    });
+
+    it("docks rail when file viewer opens on desktop", async function () {
+      createMockMatchMedia(false);
+      var ctx = createDomWithPanels();
+      initMobileMode(ctx);
+
+      ctx._fileViewer.classList.remove("hidden");
+      await new Promise(function (r) { setTimeout(r, 0); });
+
+      expect(isPanelOpen()).toBe(true);
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(true);
+      expect(ctx._railEl.parentElement).toBe(ctx._inputWrapper);
+    });
+
+    it("stays docked when switching from file viewer to terminal", async function () {
+      createMockMatchMedia(false);
+      var ctx = createDomWithPanels();
+      initMobileMode(ctx);
+
+      // Open file viewer
+      ctx._fileViewer.classList.remove("hidden");
+      await new Promise(function (r) { setTimeout(r, 0); });
+      expect(ctx._railEl.parentElement).toBe(ctx._inputWrapper);
+
+      // Switch: close file viewer, open terminal (synchronous, like real code)
+      ctx._fileViewer.classList.add("hidden");
+      ctx._terminal.classList.remove("hidden");
+      await new Promise(function (r) { setTimeout(r, 0); });
+
+      expect(isPanelOpen()).toBe(true);
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(true);
+      expect(ctx._railEl.parentElement).toBe(ctx._inputWrapper);
+    });
+
+    it("sets .nav-docked on mobile init", function () {
+      createMockMatchMedia(true);
+      var ctx = createDomWithPanels();
+      initMobileMode(ctx);
+
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(true);
+    });
+
+    it("removes .nav-docked when leaving mobile and no panel open", function () {
+      createMockMatchMedia(true);
+      var ctx = createDomWithPanels();
+      initMobileMode(ctx);
+
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(true);
+
+      fireMqlChange(false);
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(false);
+    });
+
+    it("keeps .nav-docked when leaving mobile if panel is open", async function () {
+      createMockMatchMedia(true);
+      var ctx = createDomWithPanels();
+      initMobileMode(ctx);
+
+      // Open terminal while on mobile
+      ctx._terminal.classList.remove("hidden");
+      await new Promise(function (r) { setTimeout(r, 0); });
+
+      // Switch to desktop
+      fireMqlChange(false);
+
+      expect(ctx._appEl.classList.contains("nav-docked")).toBe(true);
+      expect(ctx._railEl.parentElement).toBe(ctx._inputWrapper);
     });
   });
 

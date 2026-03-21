@@ -255,8 +255,9 @@ describe("ensureAssistantBlock: turn start gating", function () {
     app.addUserMessage("Hello");
     app.ensureAssistantBlock();
     flushTimers();
-    var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/1");
+    // 1 turn indexed — at tail so label is empty, verify via DOM
+    var turnStarts = messagesEl.querySelectorAll(".msg-assistant.msg-turn-start");
+    expect(turnStarts.length).toBe(1);
   });
 });
 
@@ -345,8 +346,9 @@ describe("Multi-turn conversation flow", function () {
     app.handleDone();
 
     flushTimers();
-    var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toMatch(/\/3$/); // X/3
+    // 3 turns indexed — verify via DOM count (label is empty at tail)
+    var turnStarts = messagesEl.querySelectorAll(".msg-assistant.msg-turn-start");
+    expect(turnStarts.length).toBe(3);
   });
 
   it("tool calls within a turn don't create extra index entries", function () {
@@ -361,9 +363,9 @@ describe("Multi-turn conversation flow", function () {
     app.handleDone();
 
     flushTimers();
-    var posLabel = document.querySelector(".msg-nav-pos");
     // Only 1 turn, even though 3 assistant blocks were created
-    expect(posLabel.textContent).toMatch(/\/1$/);
+    var turnStarts = messagesEl.querySelectorAll(".msg-assistant.msg-turn-start");
+    expect(turnStarts.length).toBe(1);
   });
 });
 
@@ -564,8 +566,9 @@ describe("History replay gating", function () {
     app.ensureAssistantBlock();
     flushTimers();
 
-    var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/1");
+    // 1 turn indexed — at tail so label is empty, verify via DOM
+    var turnStarts = messagesEl.querySelectorAll(".msg-assistant.msg-turn-start");
+    expect(turnStarts.length).toBe(1);
   });
 });
 
@@ -610,8 +613,8 @@ describe("Full streaming conversation scenario", function () {
 
     // Nav index should have exactly 1 turn
     flushTimers();
-    var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/1");
+    var turnStarts = messagesEl.querySelectorAll(".msg-assistant.msg-turn-start");
+    expect(turnStarts.length).toBe(1);
   });
 
   it("three full turns with tool calls produce exactly 3 index entries", function () {
@@ -624,7 +627,7 @@ describe("Full streaming conversation scenario", function () {
     }
 
     flushTimers();
-    var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toMatch(/\/3$/);
+    var turnStarts = messagesEl.querySelectorAll(".msg-assistant.msg-turn-start");
+    expect(turnStarts.length).toBe(3);
   });
 });

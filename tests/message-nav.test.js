@@ -154,7 +154,8 @@ describe("Index tracking", function () {
   it("indexes .msg-assistant.msg-turn-start elements", function () {
     populateTurns(5);
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/5");
+    // At scrollTop 0, currentIndex = 0, offset from end = 4 → "−4"
+    expect(posLabel.textContent).toBe("\u22124");
   });
 
   it("rejects elements without msg-turn-start class", function () {
@@ -182,7 +183,8 @@ describe("Index tracking", function () {
     messagesEl._setScrollGeometry({ scrollHeight: 4 * 300 + 600 });
     msgNav.indexRebuild();
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/4");
+    // At scrollTop 0, currentIndex = 0, offset from end = 3 → "−3"
+    expect(posLabel.textContent).toBe("\u22123");
   });
 
   it("counts only turn starts, not mid-turn assistant blocks", function () {
@@ -201,7 +203,8 @@ describe("Index tracking", function () {
     messagesEl._setScrollGeometry({ scrollHeight: 3 * 500 + 600 });
     flushTimers();
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toMatch(/\/3$/);
+    // At scrollTop 0, currentIndex = 0, offset from end = 2 → "−2"
+    expect(posLabel.textContent).toBe("\u22122");
   });
 });
 
@@ -209,26 +212,38 @@ describe("Index tracking", function () {
 // 3. POSITION COUNTER
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("Position counter", function () {
-  it("shows current/total format", function () {
+describe("Position counter (offset from end)", function () {
+  it("shows offset-from-end format when not at tail", function () {
     populateTurns(5);
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toMatch(/^\d+\/\d+$/);
+    // At scrollTop 0, offset from end = 4 → "−4"
+    expect(posLabel.textContent).toMatch(/^\u2212\d+$/);
   });
 
-  it("updates position when scrolling to different turns", function () {
+  it("updates offset when scrolling to different turns", function () {
     populateTurns(5, 300);
     // Scroll past turn 3 (offset 600); currentIndex threshold is scrollTop+80
     scrollAndUpdate(650);
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("3/5");
+    // currentIndex = 2, offset from end = 5-1-2 = 2 → "−2"
+    expect(posLabel.textContent).toBe("\u22122");
   });
 
-  it("shows position 1 at the very top", function () {
+  it("shows offset 4 at the very top of 5 turns", function () {
     populateTurns(5, 300);
     scrollAndUpdate(0);
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/5");
+    // currentIndex = 0, offset from end = 5-1-0 = 4 → "−4"
+    expect(posLabel.textContent).toBe("\u22124");
+  });
+
+  it("shows empty at the tail (offset 0)", function () {
+    populateTurns(5, 300);
+    // Scroll to the last turn
+    scrollAndUpdate(1200);
+    var posLabel = document.querySelector(".msg-nav-pos");
+    // currentIndex = 4, offset from end = 5-1-4 = 0 → empty
+    expect(posLabel.textContent).toBe("");
   });
 });
 
@@ -517,7 +532,10 @@ describe("Scroll policy", function () {
     msgNav.setScrollPolicy("pinned");
     api.setScrollPolicy.mockClear();
 
-    // User scrolls to bottom (within threshold)
+    // Advance past the re-engage grace period (200ms cooldown after break)
+    advanceTimers(250);
+
+    // User scrolls to bottom (within re-engage threshold of 15px)
     messagesEl._setScrollGeometry({ scrollTop: 2400, scrollHeight: 3000 });
     messagesEl.dispatchEvent(new Event("scroll"));
 
@@ -678,11 +696,13 @@ describe("Rail update debouncing", function () {
 
     // Not yet updated (within debounce window)
     advanceTimers(100);
-    expect(posLabel.textContent).toBe("1/3"); // still old value
+    // Still old value: at scrollTop 0, cur=0, offset=2 → "−2"
+    expect(posLabel.textContent).toBe("\u22122");
 
     // After full debounce period
     advanceTimers(200);
-    expect(posLabel.textContent).toBe("2/3"); // now updated
+    // Now updated: at scrollTop 350, cur=1, offset=1 → "−1"
+    expect(posLabel.textContent).toBe("\u22121");
   });
 
   it("coalesces multiple rapid updates into one", function () {
@@ -702,7 +722,8 @@ describe("Rail update debouncing", function () {
   it("does NOT trigger rail update on scroll during streaming", function () {
     populateTurns(3, 300);
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/3");
+    // At scrollTop 0, cur=0, offset=2 → "−2"
+    expect(posLabel.textContent).toBe("\u22122");
 
     // Start streaming
     msgNav.showStreamIndicator();
@@ -714,7 +735,7 @@ describe("Rail update debouncing", function () {
     advanceTimers(500);
 
     // Position label should NOT have updated (rail update skipped during streaming)
-    expect(posLabel.textContent).toBe("1/3");
+    expect(posLabel.textContent).toBe("\u22122");
   });
 });
 
@@ -814,13 +835,14 @@ describe("Full streaming lifecycle", function () {
     expect(endBtn.classList.contains("streaming")).toBe(true);
     expect(endBtn.querySelector(".stream-indicator-dot")).not.toBeNull();
 
-    // 2. User scrolls up — breaks auto-follow
+    // 2. User scrolls up — breaks auto-follow (past 80px break threshold)
     messagesEl._setScrollGeometry({ scrollTop: 100, scrollHeight: 3000 });
     messagesEl.dispatchEvent(new Event("scroll"));
     expect(msgNav.getScrollPolicy()).toBe("pinned");
     expect(endBtn.classList.contains("at-bottom")).toBe(false);
 
-    // 3. User scrolls back to bottom — re-engages auto-follow
+    // 3. Wait past re-engage grace period, then scroll back to bottom
+    advanceTimers(250);
     messagesEl._setScrollGeometry({ scrollTop: 2400, scrollHeight: 3000 });
     messagesEl.dispatchEvent(new Event("scroll"));
     expect(msgNav.getScrollPolicy()).toBe("auto");
@@ -912,7 +934,8 @@ describe("Session/workspace switch handling", function () {
 
     msgNav.indexRebuild();
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/3");
+    // At scrollTop 0, cur=0, offset=2 → "−2"
+    expect(posLabel.textContent).toBe("\u22122");
   });
 });
 
@@ -938,7 +961,8 @@ describe("Edge cases", function () {
   it("handles single turn correctly", function () {
     populateTurns(1, 300);
     var posLabel = document.querySelector(".msg-nav-pos");
-    expect(posLabel.textContent).toBe("1/1");
+    // Single turn at tail: offset = 0 → empty
+    expect(posLabel.textContent).toBe("");
 
     var prevBtn = document.querySelectorAll(".msg-nav-btn")[0];
     expect(prevBtn.classList.contains("disabled")).toBe(true);

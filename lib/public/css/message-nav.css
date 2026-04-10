@@ -1,0 +1,246 @@
+/* ==========================================================================
+   Message Navigation Rail & Stream Indicator
+   ========================================================================== */
+
+/* --- Turn separator: thin rule at top of the first assistant response in a turn ---
+   Rounds gently on the left edge, ends straight on the right.
+   Applied via .msg-turn-start class set by JS on ensureAssistantBlock()
+   when it's the first assistant block for a new user turn. */
+.msg-assistant.msg-turn-start::before {
+  content: "";
+  display: block;
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 10px;
+  margin-left: -20px;
+  margin-right: -20px;
+  border-radius: 3px 0 0 0;
+}
+
+/* --- Hide the legacy "Latest / New activity" floating button ---
+   Its role is now handled by the nav rail's end button. */
+#new-msg-btn {
+  display: none !important;
+}
+
+/* --- Stream indicator dot (reused in end button during streaming) --- */
+.stream-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent2);
+  animation: streamPulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes streamPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.35; transform: scale(0.75); }
+}
+
+/* --- Message Navigation Rail ---
+   Always docked as a sidecar inside #input-wrapper.
+   Base layout properties; the .nav-docked rules below handle positioning. */
+.msg-nav-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 15;
+  transition: opacity 0.25s;
+}
+
+.msg-nav-rail.empty {
+  display: none;
+}
+
+.msg-nav-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-alt);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.1s;
+  box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.12);
+  padding: 0;
+}
+
+.msg-nav-btn:hover {
+  color: var(--text);
+  background: var(--sidebar-hover);
+  border-color: var(--text-dimmer);
+}
+
+.msg-nav-btn:active {
+  transform: scale(0.9);
+}
+
+.msg-nav-btn .lucide {
+  width: 15px;
+  height: 15px;
+}
+
+/* End button: at-bottom (locked) — accent colored border + tinted fill.
+   Applies whether streaming or not — it means "anchored to bottom". */
+.msg-nav-btn.msg-nav-end.at-bottom {
+  border-color: var(--accent);
+  background: var(--accent-8);
+  color: var(--accent);
+}
+
+.msg-nav-btn.msg-nav-end.at-bottom:hover {
+  background: var(--accent-15);
+}
+
+/* End button: streaming — only controls the icon swap (blue dot).
+   Border/fill comes from at-bottom state independently. */
+.msg-nav-btn.streaming {
+  opacity: 1;
+}
+
+/* Streaming + NOT locked: grey button with blue dot (default border/bg) */
+/* Streaming + locked: accent button with blue dot */
+.msg-nav-btn.streaming.at-bottom {
+  border-color: var(--accent);
+  background: var(--accent-8);
+}
+
+/* Disabled state */
+.msg-nav-btn.disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Separator line before "end" button */
+.msg-nav-sep {
+  width: 14px;
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0;
+}
+
+/* Position counter between prev/next */
+.msg-nav-pos {
+  font-size: 10px;
+  font-family: "Roboto Mono", monospace;
+  color: var(--text-dimmer);
+  line-height: 1;
+  padding: 2px 0;
+  text-align: center;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* --- Docked sidecar: nav rail bolted onto the input box ---
+   Activated by .nav-docked on #app (set by modules/mobile-mode.js)
+   when the viewport is mobile-width OR a right-hand panel (terminal,
+   file viewer) is open and squeezing the chat column.
+
+   The rail is reparented into #input-wrapper by JS so it sits
+   physically inside the same container as #input-row — positioned
+   absolutely beside the input box like a motorcycle sidecar.
+
+   Reading mode (default): sidecar visible, input-row narrowed.
+   Typing mode (.mobile-typing): sidecar hides, input gets full width. */
+
+/* Narrow the input box to make room for the sidecar */
+.nav-docked #input-row {
+  margin-right: 40px;
+  transition: margin-right 0.15s ease;
+}
+
+.nav-docked .msg-nav-rail {
+  /* Anchor to the bottom-right of #input-wrapper (position: relative) */
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  top: auto;
+  left: auto;
+  /* Sidecar dimensions */
+  width: 34px;
+  /* Sidecar visual treatment — coordinated but distinct from input box */
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  opacity: 1;
+  gap: 1px;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+  box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.10);
+  z-index: 5;
+}
+
+.nav-docked .msg-nav-rail:hover {
+  opacity: 1;
+}
+
+.nav-docked .msg-nav-btn {
+  /* Compact rectangular buttons — no individual borders inside the sidecar */
+  width: 26px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.nav-docked .msg-nav-btn:hover {
+  background: rgba(var(--overlay-rgb), 0.10);
+  border: none;
+}
+
+.nav-docked .msg-nav-btn:active {
+  transform: scale(0.92);
+}
+
+/* Accent states still apply inside the sidecar */
+.nav-docked .msg-nav-btn.msg-nav-end.at-bottom {
+  background: var(--accent-8);
+  color: var(--accent);
+  border: none;
+}
+
+.nav-docked .msg-nav-btn.msg-nav-end.at-bottom:hover {
+  background: var(--accent-15);
+}
+
+.nav-docked .msg-nav-btn .lucide {
+  width: 13px;
+  height: 13px;
+}
+
+.nav-docked .stream-indicator-dot {
+  width: 6px;
+  height: 6px;
+}
+
+/* Hide position counter & separator — save vertical space in sidecar */
+.nav-docked .msg-nav-pos {
+  display: none;
+}
+
+.nav-docked .msg-nav-sep {
+  display: none;
+}
+
+/* --- Typing mode: hide sidecar, restore full input width ---
+   .mobile-typing is set by modules/mobile-mode.js on #app
+   when the user focuses the input textarea on a mobile device. */
+
+.mobile-typing #input-row {
+  margin-right: 0;
+}
+
+.mobile-typing .msg-nav-rail {
+  display: none;
+}
+
+/* (No floating-rail overrides needed — rail is always docked in input-wrapper) */

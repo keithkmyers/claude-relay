@@ -787,6 +787,31 @@ pre.mermaid-error {
 
 .tool-result-block.collapsed { display: none; }
 
+.tool-command-block {
+  padding: 10px 14px;
+  font-family: "Roboto Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  background: rgba(var(--overlay-rgb), 0.04);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-height: calc(1.55em * 4 + 20px); /* ~4 lines + padding */
+  overflow-y: auto;
+  margin: 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tool-command-block::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tool-command-block::-webkit-scrollbar-thumb {
+  background: var(--text-dimmer);
+  border-radius: 2px;
+}
+
 .tool-result-block pre {
   padding: 12px 14px;
   font-family: "Roboto Mono", monospace;

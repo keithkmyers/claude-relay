@@ -62,12 +62,49 @@ When the upstream jump is large enough to warrant caution:
 3. Apply patches (`.clay-custom/update-upstream.sh` or manual).
 4. Run full verification (static + unit + E2E) against the staging instance.
 5. Iterate until green.
-6. **Promote**: stop old services, migrate conversation JSONL files, swap directories, restart.
-7. Run E2E against the promoted instance as a final gate.
+6. **Promote** using one of the two paths below.
+7. **Tear down staging** — staging is temporary and must be removed after promotion.
 
-### Promotion cutover procedure
+### Choosing a promotion path
 
-When the staging instance is fully validated and ready to become production:
+| Path | When to use | Downtime | Complexity |
+|------|-------------|----------|------------|
+| **In-place upgrade** | Staging was a shakedown only (no real sessions created in it). Most common case. | ~10 sec | Low |
+| **Full migration** | Multiple instances had real conversations that need merging. | ~30 sec | Higher |
+
+### In-place upgrade (recommended default)
+
+Staging validated the code. Now just swap the code directory and keep your existing data:
+
+```bash
+# 1. Stop staging (no real data in it — nothing to migrate)
+systemctl stop clay-staging.service
+
+# 2. Stop production, swap code only
+systemctl stop clay.service
+mv app app.retired
+mv staging app
+# .clay/ stays untouched — all sessions, config, notes preserved as-is
+
+# 3. Start production
+systemctl start clay.service
+
+# 4. Final validation
+CLAY_PIN=<pin> CLAY_TEST_URL=http://localhost:2633 npx playwright test
+
+# 5. Tear down staging infrastructure
+rm -f /etc/systemd/system/clay-staging.service
+systemctl daemon-reload
+tailscale serve --https=8444 off 2>/dev/null
+rm -rf .clay-staging           # empty/throwaway data dir
+
+# 6. Clean up retired code (once confirmed)
+mv app.retired retired/        # or rm -rf app.retired
+```
+
+### Full migration (when merging sessions from multiple instances)
+
+Use this when staging or other instances have real conversations you want to keep:
 
 ```bash
 # 1. Stop non-production instances first
@@ -111,7 +148,6 @@ done
 # 5. Stop production, swap directories
 systemctl stop clay.service
 mv app app.retired
-mv upstream-v2.22 upstream-v2.22.retired  # if present
 mv staging app
 mv .clay .clay.retired
 mv .clay-staging .clay
@@ -119,7 +155,7 @@ mv .clay-staging .clay
 # 6. Start production (clay.service already points to /opt/clay/app/lib/daemon.js)
 systemctl start clay.service
 
-# 7. Clean up old services and Tailscale routes
+# 7. Tear down staging and old services
 systemctl disable clay-test.service clay-staging.service 2>/dev/null
 rm -f /etc/systemd/system/clay-test.service /etc/systemd/system/clay-staging.service
 systemctl daemon-reload
@@ -127,10 +163,10 @@ tailscale serve --https=8443 off 2>/dev/null
 tailscale serve --https=8444 off 2>/dev/null
 
 # 8. Final validation — E2E against promoted instance
-CLAY_PIN=<pin> CLAY_TEST_URL=http://100.70.4.105:2633 npx playwright test
+CLAY_PIN=<pin> CLAY_TEST_URL=http://localhost:2633 npx playwright test
 
-# 9. Once confirmed working, clean up retired dirs (optional, keep for safety)
-# rm -rf app.retired upstream-v2.22.retired .clay.retired .clay-test
+# 9. Once confirmed working, move retired dirs (or remove)
+mkdir -p retired && mv app.retired .clay.retired retired/
 ```
 
 # 10. Push finalized state to our fork

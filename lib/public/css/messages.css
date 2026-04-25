@@ -9,6 +9,31 @@
   overscroll-behavior-y: contain;
   padding: 20px 0 12px;
   position: relative;
+  contain: layout style;
+  /* Disable browser scroll anchoring — we manually adjust scrollTop after
+     history prepends.  Browser anchoring between async chunks would fight
+     with our math and cause visible shuddering. */
+  overflow-anchor: none;
+}
+
+/* While chunked history replay is rendering, suppress all widget animations.
+   Tool bullets would otherwise pulse in each chunk before their tool_result
+   event (arriving later in the stream) marks them .done — causing visual
+   chaos as dozens of historical widgets appear to be "running" all at once.
+   Once finishPrepend removes this class, any still-active tools (should be
+   none after replay) resume normal animation. */
+#messages.history-replay .tool-bullet,
+#messages.history-replay .tool-group-bullet,
+#messages.history-replay .subagent-log-bullet {
+  animation: none !important;
+}
+#messages.history-replay .icon-spin .lucide,
+#messages.history-replay .icon-spin-inline {
+  animation: none !important;
+}
+#messages.history-replay .tool-status-icon .icon-spin,
+#messages.history-replay .tool-group-status-icon .icon-spin {
+  display: none !important;
 }
 
 /* --- Remote cursors (Figma-style) --- */
@@ -133,6 +158,8 @@
   align-items: flex-end;
   max-width: var(--content-width);
   margin: 0 auto 8px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 80px;
   padding: 0 20px;
 }
 
@@ -229,6 +256,8 @@
   margin: 0 auto 12px;
   padding: 4px 20px;
   border-radius: 12px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
   transition: background 0.15s;
 }
 

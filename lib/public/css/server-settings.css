@@ -330,6 +330,44 @@
   margin-top: 2px;
 }
 
+/* --- Radio group (used for tri-state settings like AI naming) --- */
+.settings-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-radio-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.settings-radio-label:hover {
+  background: rgba(var(--overlay-rgb), 0.04);
+}
+
+.settings-radio-label input[type="radio"] {
+  margin-top: 3px;
+  accent-color: var(--accent, #7c3aed);
+  flex-shrink: 0;
+}
+
+.settings-radio-label > span:first-of-type {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 60px;
+}
+
+.settings-radio-label .settings-hint {
+  margin-top: 0;
+  flex: 1;
+}
+
 .settings-copyable-wrap {
   display: flex;
   align-items: center;

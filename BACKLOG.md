@@ -6,6 +6,13 @@ Future enhancements and infrastructure work. Move items to `ENHANCEMENTS.md` onc
 
 ## Next Up
 
+- [ ] **Message stacking**
+  When multiple messages are sent while Claude is processing, combine them into a
+  single prompt instead of generating a separate full turn for each.
+  Server-side `stackLast()` on the SDK message queue, Windmills on/off setting
+  (default off), chain-link toggle in input bar, stacked badge on bubbles.
+  Design doc: `designs/message-stacking.md`.
+
 - [ ] **Per-session Plan/Act mode persistence**
   Plan mode state remembered per session instead of globally. Switching from
   session A (plan mode) to session B should not flip B into plan mode.

@@ -23,6 +23,9 @@
 (function(){try{var k="clay-theme-vars",v=localStorage.getItem(k),r=document.documentElement;if(v){var o=JSON.parse(v),p;for(p in o)r.style.setProperty(p,o[p]);var vt=localStorage.getItem(k.replace("-vars","-variant"));if(vt==="light"){r.classList.add("light-theme");r.classList.remove("dark-theme")}else{r.classList.add("dark-theme");r.classList.remove("light-theme")}var m=document.querySelector('meta[name="theme-color"]');if(m&&o["--bg"])m.setAttribute("content",o["--bg"])}else{var sl=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches;if(sl){r.classList.add("light-theme");r.classList.remove("dark-theme")}}}catch(e){}})();
 </script>
 <script>if(window.navigator.standalone||window.matchMedia("(display-mode:standalone)").matches){document.documentElement.classList.add("pwa-standalone")}</script>
+<script>
+(function(){try{var u=localStorage.getItem("clay-server-logo");if(u){var f=document.querySelector('link[rel="icon"]');if(f)f.href=u;var l=localStorage.getItem("clay-server-logo-logo");window.__clayServerLogo=l||u}var c=localStorage.getItem("clay-server-color");if(c)window.__clayServerColor=c}catch(e){}})();
+</script>
 <link rel="stylesheet" href="style.css?v=20260407">
 <style>
 @media(max-width:768px){
@@ -69,6 +72,9 @@
       <button id="server-settings-btn" title="Server settings"><i data-lucide="settings"></i></button>
     </div>
   </div>
+  <script>
+  (function(){if(window.__clayServerColor){var t=document.getElementById("top-bar"),c=window.__clayServerColor;if(t){t.style.background=c;var h=c.replace("#",""),r=parseInt(h.substring(0,2),16)/255,g=parseInt(h.substring(2,4),16)/255,b=parseInt(h.substring(4,6),16)/255;var lum=0.2126*(r<=0.03928?r/12.92:Math.pow((r+0.055)/1.055,2.4))+0.7152*(g<=0.03928?g/12.92:Math.pow((g+0.055)/1.055,2.4))+0.0722*(b<=0.03928?b/12.92:Math.pow((b+0.055)/1.055,2.4));t.classList.add(lum>0.4?"server-color-light":"server-color-dark");t.classList.add("server-color-active")}}})();
+  </script>
 
   <!-- === Bottom row === -->
   <div id="layout-body">
@@ -77,7 +83,7 @@
   <div id="icon-strip">
     <div class="icon-strip-home" title="Clay">
       <span class="icon-strip-pill"></span>
-      <img class="icon-strip-logo" src="icon-banded-76.png" width="38" height="38" alt="Clay">
+      <img class="icon-strip-logo" src="icon-banded-76.png" width="38" height="38" alt="Clay"><script>if(window.__clayServerLogo){document.querySelector(".icon-strip-logo").src=window.__clayServerLogo}if(window.__clayServerColor){var h=document.querySelector(".icon-strip-home");if(h){h.style.setProperty("--server-color",window.__clayServerColor);h.classList.add("server-color-active")}}</script>
     </div>
     <div class="icon-strip-separator"></div>
     <div class="icon-strip-projects" id="icon-strip-projects">
@@ -309,6 +315,7 @@
           <span class="header-title" id="header-title">Connecting...</span>
           <button id="header-info-btn" type="button" title="Session info"><i data-lucide="info"></i></button>
           <button id="header-rename-btn" type="button" title="Rename session"><i data-lucide="pencil"></i></button>
+          <span id="header-name-suggestion" class="header-name-suggestion hidden"></span>
           <div id="mate-mobile-title" class="mate-mobile-title hidden">
             <button id="mate-mobile-back" class="mate-mobile-back" type="button" aria-label="Back"><i data-lucide="chevron-left"></i></button>
             <img id="mate-mobile-avatar" class="mate-mobile-avatar" alt="">
@@ -497,7 +504,7 @@
   <div id="mobile-tab-bar">
     <button class="mobile-tab" data-tab="chat" id="mob-tab-chat"><i data-lucide="message-square"></i><span class="mobile-tab-label">Chat</span></button>
     <button class="mobile-tab" data-tab="search" id="mob-tab-search"><i data-lucide="search"></i><span class="mobile-tab-label">Search</span></button>
-    <button class="mobile-tab-home" id="mobile-home-btn"><img src="/icon-banded-76.png" alt="Home" class="mobile-home-icon"></button>
+    <button class="mobile-tab-home" id="mobile-home-btn"><img src="/icon-banded-76.png" alt="Home" class="mobile-home-icon"></button><script>if(window.__clayServerLogo){document.querySelector(".mobile-home-icon").src=window.__clayServerLogo}</script>
     <button class="mobile-tab" data-tab="tools" id="mob-tab-tools"><i data-lucide="wrench"></i><span class="mobile-tab-label">Tools</span></button>
     <button class="mobile-tab" data-tab="settings" id="mob-tab-settings"><i data-lucide="settings"></i><span class="mobile-tab-label">Settings</span></button>
   </div>
@@ -946,6 +953,9 @@
             <option value="admin-projects">Projects</option>
             <option value="admin-smtp">Email</option>
           </optgroup>
+          <optgroup label="Windmills">
+            <option value="ai-features">AI Features</option>
+          </optgroup>
           <optgroup label="Server">
             <option value="keep-awake" class="hidden" id="settings-keep-awake-opt">Keep Awake</option>
             <option value="restart">Restart</option>
@@ -971,6 +981,9 @@
           <button class="settings-nav-item settings-admin-only" data-section="admin-invites"><span>Invites</span></button>
           <button class="settings-nav-item settings-admin-only" data-section="admin-projects"><span>Projects</span></button>
           <button class="settings-nav-item settings-admin-only" data-section="admin-smtp"><span>Email</span></button>
+          <div class="settings-nav-separator"></div>
+          <div class="settings-nav-category">Windmills</div>
+          <button class="settings-nav-item" data-section="ai-features"><span>AI Features</span></button>
           <div class="settings-nav-separator"></div>
           <div class="settings-nav-category">Server</div>
           <button class="settings-nav-item hidden" data-section="keep-awake" id="settings-keep-awake-nav"><span>Keep Awake</span></button>
@@ -1238,6 +1251,30 @@
                 <button class="settings-btn-sm" id="settings-restart-btn"><i data-lucide="refresh-cw" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>Restart</button>
               </div>
               <div class="settings-hint settings-restart-error hidden" id="settings-restart-error" style="margin-top: 8px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="server-settings-section" data-section="ai-features">
+          <h2>AI Features</h2>
+          <p class="settings-hint" style="margin-bottom: 16px;">System-initiated AI queries that enhance Clay. These run as isolated, tool-free queries separate from your conversations.</p>
+          <div class="settings-card">
+            <div class="settings-field">
+              <label class="settings-label">Session Naming</label>
+              <div class="settings-hint">After your first message, AI generates a concise session title.</div>
+              <div class="settings-radio-group" id="settings-auto-naming" style="margin-top: 10px;">
+                <label class="settings-radio-label">
+                  <input type="radio" name="auto-naming" value="off"> <span>Off</span>
+                  <span class="settings-hint">No AI naming. Sessions use the first 50 characters.</span>
+                </label>
+                <label class="settings-radio-label">
+                  <input type="radio" name="auto-naming" value="suggest"> <span>Suggest</span>
+                  <span class="settings-hint">AI suggests a name shown in the header for your approval.</span>
+                </label>
+                <label class="settings-radio-label">
+                  <input type="radio" name="auto-naming" value="auto"> <span>Auto</span>
+                  <span class="settings-hint">AI names sessions automatically after the first exchange.</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>

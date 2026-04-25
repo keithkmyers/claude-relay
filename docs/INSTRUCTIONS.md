@@ -35,72 +35,81 @@ This is a fork of [chadbyte/claude-relay](https://github.com/chadbyte/claude-rel
 
 ## Deployment / Upstream Update Workflow
 
-### Routine: apply a new upstream release
+**Every upstream upgrade goes through staging**, using the two numbered scripts in `.clay-custom/`. Full details of what each does and its preconditions live in `.clay-custom/README.md`.
+
+### Pre-flight (recommended)
+
+Before staging an upstream upgrade, push prod's current state to origin so there's a remote backup of everything our patch represents. Not enforced by the scripts — just sound housekeeping.
 
 ```bash
-# 1. Capture current state
-.clay-custom/snapshot.sh
-
-# 2. Merge upstream + reapply our patch
-.clay-custom/update-upstream.sh --channel stable   # or beta, or head
-
-# 3. Verify — all three must pass
-scripts/verify-features.sh                          # static markers
-npx vitest run                                      # unit tests
-CLAY_TEST_URL=http://localhost:PORT npx playwright test   # E2E
-
-# 4. If all green, re-snapshot with the new base
-.clay-custom/snapshot.sh
+cd /opt/clay/app
+git status                                    # review what's modified / untracked
+git add -A
+git commit -m "chore: pre-migration snapshot of prod state"
+git push origin main
 ```
 
-### Full staging workflow (new major version)
+This is your safety net. If a migration goes sideways and prod state needs to be reconstructed, origin has it.
 
-When the upstream jump is large enough to warrant caution:
-
-1. Stand up a **staging instance** (`/opt/clay/staging`, port 2635, `CLAY_HOME=/opt/clay/.clay-staging`).
-2. Clone fresh from upstream at the target release.
-3. Apply patches (`.clay-custom/update-upstream.sh` or manual).
-4. Run full verification (static + unit + E2E) against the staging instance.
-5. Iterate until green.
-6. **Promote** using one of the two paths below.
-7. **Tear down staging** — staging is temporary and must be removed after promotion.
-
-### Choosing a promotion path
-
-| Path | When to use | Downtime | Complexity |
-|------|-------------|----------|------------|
-| **In-place upgrade** | Staging was a shakedown only (no real sessions created in it). Most common case. | ~10 sec | Low |
-| **Full migration** | Multiple instances had real conversations that need merging. | ~30 sec | Higher |
-
-### In-place upgrade (recommended default)
-
-Staging validated the code. Now just swap the code directory and keep your existing data:
+### Standard flow
 
 ```bash
-# 1. Stop staging (no real data in it — nothing to migrate)
-systemctl stop clay-staging.service
+# 0. Capture current state (only if prod has uncommitted changes)
+./.clay-custom/snapshot.sh
 
-# 2. Stop production, swap code only
+# 1. Stage — clones pure upstream at target, applies our patch, starts
+#    clay-staging.service on port 2635. Prod (clay.service on 2633) is NOT touched.
+./.clay-custom/01_stage_migration.sh                    # latest stable upstream release
+#   --channel beta | head     other upstream channels
+#   --auto                     Claude resolves patch conflicts on merge
+#   --dry-run                  preview target, touch nothing
+
+# 2. Verify + smoke-test on http://localhost:2635
+scripts/verify-features.sh                              # static markers
+cd /opt/clay/staging && npx vitest run                  # unit tests
+CLAY_TEST_URL=http://localhost:2635 npx playwright test # E2E
+# — iterate on any bugs directly in /opt/clay/staging in place —
+
+# 3. Promote (atomic swap + restart).
+#    Refuses unless staging healthy, staging version > prod version,
+#    and no lingering app.retired from a prior unfinished promotion.
+./.clay-custom/02_prod_migration.sh
+
+# 4. Once prod is confirmed stable
+mv /opt/clay/app.retired /opt/clay/retired/
+./.clay-custom/snapshot.sh                              # regenerate patch on new base
+```
+
+### What each script does
+
+- **`01_stage_migration.sh`** — clones pure upstream (`chadbyte/claude-relay`) at target tag into `/opt/clay/staging`, copies `.clay-custom/` from prod (patch vehicle), applies `tracked.patch` with `git apply --3way` (or Claude resolution under `--auto`), restores untracked custom files, runs `npm install`, updates the Claude Agent SDK, seeds `$STAGING_CLAY_HOME/daemon.json` with port 2635, installs and starts `clay-staging.service`.
+- **`02_prod_migration.sh`** — preflights the four preconditions above, stops both services, atomic `mv` swap (`app → app.retired`, `staging → app`), starts `clay.service`, tears down the staging systemd unit and `.clay-staging` data dir, runs `verify-features.sh` against prod.
+
+### Rollback
+
+If prod is broken after promotion (while `app.retired` still exists):
+
+```bash
 systemctl stop clay.service
-mv app app.retired
-mv staging app
-# .clay/ stays untouched — all sessions, config, notes preserved as-is
-
-# 3. Start production
+mv /opt/clay/app /opt/clay/app.broken
+mv /opt/clay/app.retired /opt/clay/app
 systemctl start clay.service
+```
 
-# 4. Final validation
-CLAY_PIN=<pin> CLAY_TEST_URL=http://localhost:2633 npx playwright test
+### Aborting a staging pass
 
-# 5. Tear down staging infrastructure
+If staging is wrong and you want to throw it away without touching prod:
+
+```bash
+systemctl stop clay-staging.service
 rm -f /etc/systemd/system/clay-staging.service
 systemctl daemon-reload
-tailscale serve --https=8444 off 2>/dev/null
-rm -rf .clay-staging           # empty/throwaway data dir
-
-# 6. Clean up retired code (once confirmed)
-mv app.retired retired/        # or rm -rf app.retired
+rm -rf /opt/clay/staging /opt/clay/.clay-staging
 ```
+
+### Manual / full-migration fallback
+
+The two scripts above cover the common case (prod is the only instance with real data; staging is a throwaway shakedown). If you need to merge sessions from multiple live instances before promotion, use the "Full migration" procedure below as a manual override.
 
 ### Full migration (when merging sessions from multiple instances)
 

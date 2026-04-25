@@ -4,12 +4,22 @@
 - Use `var` instead of `const`/`let`. No arrow functions.
 - Server-side: CommonJS (`require`). Client-side: ES modules (`import`).
 - Never commit, create PRs, merge, or comment on issues automatically. Only do these when explicitly asked.
+- Never restart the Clay service (`clay.service`, `clay-test.service`) without explicit approval from the user first. Restarts disconnect all active sessions.
 - All user-facing messages, code comments, and commit messages must be in English only.
 - Commit messages must follow Angular Commit Convention (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `perf:`, `test:`, `style:`, `ci:`, `build:`). Use `!` or `BREAKING CHANGE:` footer for breaking changes. Always use the `angular-commit` skill when committing.
 
 ## Development Guide
 
-For full development instructions, the enhancement registry, deployment workflow, and backward-compatibility rules, see **[`docs/INSTRUCTIONS.md`](docs/INSTRUCTIONS.md)**. For the authoritative list of all custom features, see **[`ENHANCEMENTS.md`](ENHANCEMENTS.md)**. For future work, see **[`BACKLOG.md`](BACKLOG.md)**.
+Foundational docs — always loaded into context:
+- @docs/INSTRUCTIONS.md — development, staging, deployment, promotion paths
+- @ENHANCEMENTS.md — source of truth for all custom features
+- @.clay-custom/README.md — patch & migration tooling (`.clay-custom/` is gitignored local state; the README explains its role)
+
+### RRD Reference Docs
+
+**RRD** = "Read Relevant Documents" — read these in full when the current task touches their subject, not on every session:
+- `BACKLOG.md` — future work and unscheduled ideas (read when planning new features or triaging backlog)
+- `designs/scroll-behavior-and-message-navigation.md` — rationale for nav rail + scroll thresholds (read when touching message-nav or scroll code)
 
 # About This Repo
 
@@ -26,49 +36,28 @@ We maintain custom patches on top of upstream releases. Our changes are never me
 - **Refined scroll thresholds** (`lib/public/app.js`, `lib/public/modules/message-nav.js`) — dual threshold system: 80px to break auto-follow (easier to escape), 15px to re-engage (must scroll all the way back), 200ms grace period to prevent bounce re-engage.
 - **Mobile touchend send fix** (`lib/public/modules/input.js`) — handles `touchend` before `blur` to prevent keyboard-close layout shift from swallowing taps on the send button.
 - **Design doc** (`designs/scroll-behavior-and-message-navigation.md`) — detailed rationale for the scroll and nav features.
-- **Tests** (`tests/message-nav.test.js`, `tests/mobile-mode.test.js`, `tests/scroll-integration.test.js`, `vitest.config.js`) — full test suites for the above.
+- **Server logo customization** (`lib/public/modules/server-logo.js`, `lib/public/css/server-logo.css`) — right-click the Clay logo to choose a custom server icon from a scrollable emoji palette (8 categories), upload a custom image, or pick a background color (16 dark-mode-friendly presets + native color picker). Color applies to icon background, top bar band, and browser favicon for at-a-glance server identification.
+- **Tests** (`tests/message-nav.test.js`, `tests/mobile-mode.test.js`, `tests/scroll-integration.test.js`, `tests/server-logo.test.js`, `vitest.config.js`) — full test suites for the above.
 
 ## Upstream Update Workflow (`.clay-custom/`)
 
-The `.clay-custom/` directory contains scripts for managing our fork's relationship with upstream. This is the key workflow:
+The `.clay-custom/` directory (gitignored, local-only) holds the patch vehicle and migration tooling. Full details in `.clay-custom/README.md`. Summary:
 
-### 1. Snapshot current customizations
-
+### Capture current state
 ```bash
-.clay-custom/snapshot.sh
+./.clay-custom/snapshot.sh
+```
+Regenerates `tracked.patch`, `base-ref`, `untracked.tar.gz`. Run after changes before a migration.
+
+### Upgrade to a new upstream release (two numbered scripts)
+```bash
+./.clay-custom/01_stage_migration.sh          # stage to /opt/clay/staging, start clay-staging.service on :2635
+# → test on http://localhost:2635
+./.clay-custom/02_prod_migration.sh           # atomic swap + restart prod
 ```
 
-Captures all our changes (committed + uncommitted) as a diff against the upstream base into `tracked.patch`. Also archives any untracked custom files. Run this after making changes so the update script has the latest patch.
-
-**Outputs:**
-- `tracked.patch` — diff of all our modifications vs upstream base
-- `base-ref` — the upstream commit SHA the patch was generated against
-- `untracked-files.list` — list of files we added that aren't in upstream
-- `untracked.tar.gz` — archive of those files (if any)
-
-### 2. Update to a new upstream release
-
-```bash
-.clay-custom/update-upstream.sh [options]
-```
-
-Fetches upstream, resets to clean state, merges to target release, re-applies our patch, installs deps, and restarts the service.
-
-**Options:**
-- `--channel stable` (default) — latest stable tag (e.g. v2.14.0)
-- `--channel beta` — latest tag including betas
-- `--channel head` — upstream/main HEAD
-- `--dry-run` — just show what's new, don't change anything
-- `--auto` — if patch conflicts, invoke Claude (`claude -p`) to resolve them intelligently
-
-**The dance:**
-1. Resets working tree to clean upstream state
-2. Merges forward to the target upstream release
-3. Re-applies `tracked.patch` with `git apply --3way`
-4. If conflicts + `--auto`: Claude resolves them
-5. Runs `npm install` and updates the Agent SDK
-6. Syntax-checks `app.js`
-7. Restarts `clay.service`
+`01_` supports `--channel [stable|beta|head]`, `--auto` (Claude conflict resolution), `--dry-run`.
+`02_` refuses unless staging is healthy and its version > prod's.
 
 ## Service Architecture
 

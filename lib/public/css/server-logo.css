@@ -1,0 +1,443 @@
+/* ==========================================================================
+   Server Logo Picker — popover for customizing the Clay logo per-server
+   ========================================================================== */
+
+.server-logo-popover {
+  position: fixed;
+  z-index: 9000;
+  width: 320px;
+  background: var(--bg-secondary, #1e1e2e);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: server-logo-pop-in 0.15s ease-out;
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+
+@keyframes server-logo-pop-in {
+  from { opacity: 0; transform: scale(0.95) translateX(-8px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+}
+
+/* Header */
+.server-logo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.server-logo-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.server-logo-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.server-logo-close-btn:hover {
+  color: var(--text);
+}
+
+/* Body */
+.server-logo-body {
+  padding: 12px 14px 6px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Preview row */
+.server-logo-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.server-logo-preview-wrap {
+  flex-shrink: 0;
+}
+
+.server-logo-preview-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: var(--bg-alt);
+}
+
+.server-logo-preview-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Field */
+.server-logo-field {
+  margin-bottom: 12px;
+}
+
+.server-logo-field-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* Color grid */
+.server-logo-color-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.server-logo-color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s;
+  flex-shrink: 0;
+}
+
+.server-logo-color-swatch:hover {
+  transform: scale(1.2);
+}
+
+.server-logo-color-swatch.server-logo-color-active {
+  box-shadow: 0 0 0 2px var(--bg-secondary, #1e1e2e), 0 0 0 4px var(--accent);
+}
+
+/* All dark swatches need a visible border */
+.server-logo-color-swatch {
+  border-color: rgba(255,255,255,0.12);
+}
+
+/* Custom color picker — looks like a swatch with a hidden <input type="color"> */
+.server-logo-color-picker-wrap {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+
+.server-logo-color-picker-wrap:hover {
+  transform: scale(1.2);
+}
+
+.server-logo-color-picker-wrap.server-logo-color-active {
+  box-shadow: 0 0 0 2px var(--bg-secondary, #1e1e2e), 0 0 0 4px var(--accent);
+}
+
+.server-logo-color-picker-swatch {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.12);
+  box-sizing: border-box;
+  /* Diagonal gradient stripe to hint "custom" */
+  background-image: conic-gradient(
+    from 0deg,
+    #a00 0deg, #a60 60deg, #0a0 120deg,
+    #0aa 180deg, #00a 240deg, #a0a 300deg, #a00 360deg
+  );
+}
+
+.server-logo-color-picker-wrap.server-logo-color-active .server-logo-color-picker-swatch {
+  background-image: none; /* show the actual chosen color */
+}
+
+.server-logo-color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+/* Default + Upload row */
+.server-logo-top-row {
+  display: flex;
+  gap: 6px;
+}
+
+.server-logo-option {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  padding: 3px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.server-logo-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.server-logo-option:hover {
+  border-color: var(--text-muted);
+  transform: scale(1.05);
+}
+
+.server-logo-option.server-logo-option-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Upload button */
+.server-logo-upload .server-logo-upload-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-muted);
+}
+
+.server-logo-upload:hover .server-logo-upload-icon {
+  color: var(--text);
+}
+
+.server-logo-custom-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* Scrollable emoji palette */
+.server-logo-palette {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  background: var(--bg);
+  margin-bottom: 8px;
+}
+
+/* Slim scrollbar inside palette */
+.server-logo-palette::-webkit-scrollbar {
+  width: 5px;
+}
+.server-logo-palette::-webkit-scrollbar-track {
+  background: transparent;
+}
+.server-logo-palette::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+.server-logo-palette::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Category labels */
+.server-logo-cat-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 6px 0 4px 2px;
+  user-select: none;
+}
+
+.server-logo-cat-label:first-child {
+  margin-top: 0;
+}
+
+/* Emoji grid */
+.server-logo-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+
+.server-logo-emoji {
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.1s, transform 0.1s;
+}
+
+.server-logo-emoji:hover {
+  background: var(--bg-alt);
+  transform: scale(1.15);
+}
+
+.server-logo-emoji.server-logo-emoji-active {
+  background: var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* ==========================================================================
+   Icon-strip home — colored background behind the logo
+   ========================================================================== */
+
+.icon-strip-home.server-color-active::before {
+  background: var(--server-color) !important;
+}
+
+/* ==========================================================================
+   Top bar server-color band — overrides child element colors for readability
+   ========================================================================== */
+
+/* Dark background → light text/icons */
+#top-bar.server-color-dark .top-bar-share-btn,
+#top-bar.server-color-dark .top-bar-install-btn {
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.15);
+}
+#top-bar.server-color-dark .top-bar-share-btn:hover,
+#top-bar.server-color-dark .top-bar-install-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+#top-bar.server-color-dark .top-bar-update-btn {
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.15);
+}
+#top-bar.server-color-dark .cmd-palette-searchbar {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
+}
+#top-bar.server-color-dark .cmd-palette-searchbar:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.8);
+}
+#top-bar.server-color-dark .cmd-palette-searchbar-kbd {
+  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+}
+#top-bar.server-color-dark .top-bar-actions button {
+  color: rgba(255,255,255,0.6);
+}
+#top-bar.server-color-dark .top-bar-actions button:hover {
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.12);
+}
+#top-bar.server-color-dark .top-bar-pill {
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.15);
+}
+
+/* Light background → dark text/icons */
+#top-bar.server-color-light .top-bar-share-btn,
+#top-bar.server-color-light .top-bar-install-btn {
+  color: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.08);
+}
+#top-bar.server-color-light .top-bar-share-btn:hover,
+#top-bar.server-color-light .top-bar-install-btn:hover {
+  background: rgba(0,0,0,0.15);
+}
+#top-bar.server-color-light .top-bar-update-btn {
+  color: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.08);
+}
+#top-bar.server-color-light .cmd-palette-searchbar {
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.12);
+  color: rgba(0,0,0,0.45);
+}
+#top-bar.server-color-light .cmd-palette-searchbar:hover {
+  background: rgba(0,0,0,0.1);
+  border-color: rgba(0,0,0,0.18);
+  color: rgba(0,0,0,0.65);
+}
+#top-bar.server-color-light .cmd-palette-searchbar-kbd {
+  color: rgba(0,0,0,0.45);
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.12);
+}
+#top-bar.server-color-light .top-bar-actions button {
+  color: rgba(0,0,0,0.45);
+}
+#top-bar.server-color-light .top-bar-actions button:hover {
+  color: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.08);
+}
+#top-bar.server-color-light .top-bar-pill {
+  color: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.08);
+}
+
+/* Smooth transition on the top bar */
+#top-bar.server-color-active {
+  transition: background 0.2s ease;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .server-logo-popover {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%);
+    width: calc(100vw - 32px);
+    max-width: 360px;
+    max-height: 85vh;
+  }
+
+  @keyframes server-logo-pop-in {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  .server-logo-emoji-grid {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .server-logo-emoji {
+    font-size: 22px;
+  }
+}

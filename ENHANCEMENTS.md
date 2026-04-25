@@ -81,6 +81,22 @@ All custom features layered on top of upstream [chadbyte/claude-relay](https://g
 - **E2E**: Context bar displays accurate token count after a response
 - **Added**: 2026-03
 
+### Server Logo Customization
+- **Description**: Right-click the Clay logo (top-left) to open a popover for choosing a custom server icon. Includes a scrollable emoji palette (8 categories: Tech, Science, Nature, Transport, Books, Animals, Objects, Symbols), custom image upload with crop tool, and a dark-mode-friendly color picker (16 muted presets + native color input). The selected color is applied as the icon background, the `#top-bar` background band (for at-a-glance server identification), and the browser tab favicon. Settings persist server-wide in `$CONFIG_DIR/server-logo.json`.
+- **Files**: `lib/public/modules/server-logo.js`, `lib/public/css/server-logo.css`, `lib/public/app.js` (init call + event listener), `lib/server.js` (API routes)
+- **Static markers**: `initServerLogo` import in `app.js`, `ICON_CATEGORIES` and `applyServerColor` in `server-logo.js`, `server-logo-color-input` in `server-logo.js`, `server-color-dark` class in `server-logo.css`
+- **E2E selectors**: `.server-logo-popover`, `.server-logo-emoji`, `.server-logo-color-swatch`, `.server-logo-color-input`, `.server-logo-palette`
+- **Unit tests**: `tests/server-logo.test.js` (36 tests)
+- **Added**: 2026-04
+
+### Session Status (Sidebar)
+- **Description**: Mark sessions with a status (currently "done"). Right-click a session in the sidebar → "Mark Done" to toggle a green ✓ checkmark icon next to the session title. Done sessions have slightly dimmed text when not active. Status is persisted in the JSONL meta line and survives restarts. Architecture supports future status values.
+- **Files**: `lib/sessions.js`, `lib/project.js`, `lib/public/modules/sidebar.js`, `lib/public/css/admin.css`
+- **Server handler**: `set_session_status` message type in `lib/project.js`
+- **Static markers**: `setSessionStatus` in `sessions.js`, `set_session_status` in `project.js`, `session-status-icon` in `sidebar.js`, `session-status-icon` in `admin.css`
+- **E2E selectors**: `.session-ctx-item` containing "Mark Done", `.session-status-icon.done` after marking
+- **Added**: 2026-04
+
 ---
 
 ## Integration Infrastructure
@@ -90,7 +106,7 @@ All custom features layered on top of upstream [chadbyte/claude-relay](https://g
 | Static verifier | `scripts/verify-features.sh` | Greps source for all static markers |
 | E2E tests | `tests/e2e/windmills.spec.js` | Playwright tests against running instance |
 | Vitest unit tests | `tests/*.test.js` | DOM-level unit tests (jsdom) |
-| Patch management | `.clay-custom/` | Snapshot/update-upstream scripts |
+| Patch management | `.clay-custom/` | Snapshot + two-script migration flow (`01_stage_migration.sh` → test → `02_prod_migration.sh`). See `.clay-custom/README.md`. |
 | Design docs | `designs/` | Feature rationale and specs |
 | Instructions | `docs/INSTRUCTIONS.md` | Dev guide, deployment steps |
 | Backlog | `BACKLOG.md` | Future work queue |

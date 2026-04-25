@@ -664,6 +664,33 @@
   height: 12px;
 }
 
+/* --- Session status indicator --- */
+.session-status-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.session-status-icon.done {
+  color: var(--success, #27ae60);
+}
+
+.session-status-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Dim title text for done sessions */
+.session-item.status-done:not(.active) .session-item-text {
+  opacity: 0.55;
+}
+
+.session-item.status-done:not(.active) .session-status-icon {
+  opacity: 1;
+}
+
 /* --- Permissions modal --- */
 .admin-perms-list {
   display: flex;

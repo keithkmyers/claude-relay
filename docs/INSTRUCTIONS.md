@@ -11,7 +11,7 @@ This is a fork of [chadbyte/claude-relay](https://github.com/chadbyte/claude-rel
 
 | File | Purpose |
 |------|---------|
-| [`ENHANCEMENTS.md`](../ENHANCEMENTS.md) | **Source of truth** for all custom features. Always update this when adding/changing/removing a windmill. |
+| [`ENHANCEMENTS.md`](../ENHANCEMENTS.md) | **Source of truth** for all custom features. Always update this when adding/changing/removing a windmills feature. |
 | [`BACKLOG.md`](../BACKLOG.md) | Future work and ideas. Move items here to ENHANCEMENTS.md once done. |
 | [`.clay-custom/`](../.clay-custom/) | Patch management scripts (`snapshot.sh`, `update-upstream.sh`). |
 | [`tests/e2e/`](../tests/e2e/) | Playwright E2E tests that verify windmills render and work in a live instance. |

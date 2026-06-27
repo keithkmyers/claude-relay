@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# ------------------------------------------------------------------
+# clay-update — on-device clay update (run ON the box, the standard way)
+# ------------------------------------------------------------------
+# Updates this box's clay checkout to a windmills branch and bounces the
+# service. This is the canonical update primitive — the HQ-side
+# init/install/clay-deploy.sh is just a thin SSH wrapper around it, so deploy
+# is never "solely HQ-based": any box can update itself directly. Per-box
+# config (/opt/clay/.clay) is never touched.
+#
+# Usage (on the box):
+#   /opt/clay/app/utils/clay-update                 # update to the current branch
+#   /opt/clay/app/utils/clay-update windmills-2.46  # switch/bump to a branch
+# ------------------------------------------------------------------
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP="$(cd "$DIR/.." && pwd)"                 # <root>/app
+ROOT="$(cd "$APP/.." && pwd)"                # <root>
+NODE="$ROOT/.node/bin/node"; [ -x "$NODE" ] || NODE="$(command -v node || true)"
+[ -x "$NODE" ] || { echo "clay-update: no node runtime found" >&2; exit 1; }
+CLAY_HOME="${CLAY_HOME:-$ROOT/.clay}"
+
+cd "$APP"
+BRANCH="${1:-$(git rev-parse --abbrev-ref HEAD)}"
+echo "→ clay-update: ${BRANCH} on $(hostname)"
+
+git stash push -u -m "clay-update autostash $(date -u +%FT%TZ)" >/dev/null 2>&1 || true
+git fetch --quiet origin "${BRANCH}"
+git checkout -B "${BRANCH}" "origin/${BRANCH}" >/dev/null 2>&1
+echo "  checkout: ${BRANCH} @ $(git rev-parse --short HEAD)  v$(grep -oP '"version":\s*"\K[^"]+' package.json | head -1)"
+
+PATH="$(dirname "$NODE"):$PATH" HOME="${HOME:-/root}" npm install --no-audit --no-fund >/dev/null 2>&1
+echo "  npm install: done"
+"$NODE" --check lib/daemon.js && echo "  syntax: OK"
+
+systemctl restart clay
+
+# Clay can take several seconds to bind when it adopts CLI sessions on startup.
+HP=$("$NODE" -e 'var c=require(process.argv[1]);process.stdout.write((c.host||"127.0.0.1")+":"+(c.port||2633))' "$CLAY_HOME/daemon.json" 2>/dev/null || echo "127.0.0.1:2633")
+CODE=000
+for _i in $(seq 1 15); do
+  sleep 2
+  CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://${HP}/" 2>/dev/null || true)
+  [ "${CODE}" = "200" ] && break
+done
+echo "  service: $(systemctl is-active clay) · http://${HP} → HTTP ${CODE}"
+[ "${CODE}" = "200" ] || { echo "  !! smoke-test failed (HTTP ${CODE}) — check 'journalctl -u clay'"; exit 1; }
+echo "✓ clay-update done: ${BRANCH} live."

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# clay-pin — thin launcher: runs clay-pin.js with Clay's vendored node (falls
+# back to system node). Works whether this dir is <root>/utils or <root>/app/utils.
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NODE=""
+for cand in "$DIR/../.node/bin/node" "$DIR/../../.node/bin/node"; do
+  [ -x "$cand" ] && { NODE="$cand"; break; }
+done
+[ -n "$NODE" ] && [ -x "$NODE" ] || NODE="$(command -v node || true)"
+[ -n "$NODE" ] && [ -x "$NODE" ] || { echo "clay-pin: no node runtime found" >&2; exit 1; }
+exec "$NODE" "$DIR/clay-pin.js" "$@"

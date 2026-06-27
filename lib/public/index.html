@@ -1143,6 +1143,9 @@
             <option value="claudemd">Instructions</option>
             <option value="environment">Environment</option>
           </optgroup>
+          <optgroup label="Windmills"> <!-- windmills -->
+            <option value="windmills">Windmills</option> <!-- windmills -->
+          </optgroup> <!-- windmills -->
           <optgroup label="Admin" class="settings-admin-only">
             <option value="admin-users">Users</option>
             <option value="admin-invites">Invites</option>
@@ -1168,6 +1171,9 @@
           <button class="settings-nav-item" data-section="claudemd"><span>Instructions</span></button>
           <button class="settings-nav-item" data-section="environment"><span>Environment</span></button>
           <button class="settings-nav-item" data-section="storage"><span>Storage</span></button>
+          <div class="settings-nav-separator"></div> <!-- windmills -->
+          <div class="settings-nav-category">Windmills</div> <!-- windmills -->
+          <button class="settings-nav-item" data-section="windmills"><span>Windmills</span></button> <!-- windmills -->
           <div class="settings-nav-separator settings-admin-only"></div>
           <div class="settings-nav-category settings-admin-only">Admin</div>
           <button class="settings-nav-item settings-admin-only" data-section="admin-users"><span>Users</span></button>
@@ -1416,6 +1422,36 @@
             </label>
           </div>
         </div>
+        <!-- Windmills overlay settings section --> <!-- windmills -->
+        <div class="server-settings-section" data-section="windmills"> <!-- windmills -->
+          <h2>Windmills</h2> <!-- windmills -->
+          <div class="settings-card"> <!-- windmills -->
+            <label class="settings-toggle-row"> <!-- windmills -->
+              <div> <!-- windmills -->
+                <span class="settings-label">Adopt CLI sessions</span> <!-- windmills -->
+                <div class="settings-hint">Show your terminal <code>claude</code> sessions in this list.</div> <!-- windmills -->
+              </div> <!-- windmills -->
+              <input type="checkbox" id="settings-wm-adopt"> <!-- windmills -->
+              <span class="toggle-track"><span class="toggle-thumb"></span></span> <!-- windmills -->
+            </label> <!-- windmills -->
+            <label class="settings-toggle-row"> <!-- windmills -->
+              <div> <!-- windmills -->
+                <span class="settings-label">Filter configuration sessions</span> <!-- windmills -->
+                <div class="settings-hint">Hide sessions that only ran slash commands (/effort, /compact, …).</div> <!-- windmills -->
+              </div> <!-- windmills -->
+              <input type="checkbox" id="settings-wm-filter-config"> <!-- windmills -->
+              <span class="toggle-track"><span class="toggle-thumb"></span></span> <!-- windmills -->
+            </label> <!-- windmills -->
+            <label class="settings-toggle-row"> <!-- windmills -->
+              <div> <!-- windmills -->
+                <span class="settings-label">Allow Auto mode</span> <!-- windmills -->
+                <div class="settings-hint">Show the Auto permission mode in the session permission picker.</div> <!-- windmills -->
+              </div> <!-- windmills -->
+              <input type="checkbox" id="settings-wm-auto"> <!-- windmills -->
+              <span class="toggle-track"><span class="toggle-thumb"></span></span> <!-- windmills -->
+            </label> <!-- windmills -->
+          </div> <!-- windmills -->
+        </div> <!-- windmills -->
         <!-- Auto-continue moved to User Settings > Behavior -->
         <div class="server-settings-section hidden" data-section="keep-awake" id="settings-keep-awake-section">
           <h2>Keep Awake</h2>

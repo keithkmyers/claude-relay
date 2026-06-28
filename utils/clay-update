@@ -33,7 +33,7 @@ PATH="$(dirname "$NODE"):$PATH" HOME="${HOME:-/root}" npm install --no-audit --n
 echo "  npm install: done"
 "$NODE" --check lib/daemon.js && echo "  syntax: OK"
 
-systemctl restart clay
+"$DIR/clay-restart" --now   # unified restart path (a deploy is deliberate → immediate; the graceful quiescence gate is clay-restart itself, run standalone)
 
 # Clay can take several seconds to bind when it adopts CLI sessions on startup.
 HP=$("$NODE" -e 'var c=require(process.argv[1]);process.stdout.write((c.host||"127.0.0.1")+":"+(c.port||2633))' "$CLAY_HOME/daemon.json" 2>/dev/null || echo "127.0.0.1:2633")
